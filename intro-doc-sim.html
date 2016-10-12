@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>用text2vec做文本分析</title>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <meta name="description" content="介绍用text2vec包进行文本分析的若干步骤，包括建立文本-词矩阵、文本聚类、文本分类、glovec算法、LDA算法等。">
+  <meta name="generator" content="bookdown 0.1.16 and GitBook 2.6.7">
+
+  <meta property="og:title" content="用text2vec做文本分析" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="介绍用text2vec包进行文本分析的若干步骤，包括建立文本-词矩阵、文本聚类、文本分类、glovec算法、LDA算法等。" />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="用text2vec做文本分析" />
+  
+  <meta name="twitter:description" content="介绍用text2vec包进行文本分析的若干步骤，包括建立文本-词矩阵、文本聚类、文本分类、glovec算法、LDA算法等。" />
+  
+
+<meta name="author" content="德米特里·谢利瓦诺夫">
+
+  
+<meta name="date" content="2016-10-12">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  
+<link rel="prev" href="intro-textmining.html">
+
+
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+</head>
+
+<body>
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> text2vec简介</a></li>
+<li class="chapter" data-level="2" data-path="intro-textmining.html"><a href="intro-textmining.html"><i class="fa fa-check"></i><b>2</b> 文本分析的一般步骤</a></li>
+<li class="chapter" data-level="3" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html"><i class="fa fa-check"></i><b>3</b> 文档相似性</a><ul>
+<li class="chapter" data-level="3.1" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#api"><i class="fa fa-check"></i><b>3.1</b> API</a></li>
+<li class="chapter" data-level="3.2" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#section-3.2"><i class="fa fa-check"></i><b>3.2</b> 实例</a><ul>
+<li class="chapter" data-level="3.2.1" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#jaccard"><i class="fa fa-check"></i><b>3.2.1</b> Jaccard相似</a></li>
+<li class="chapter" data-level="3.2.2" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#section-3.2.2"><i class="fa fa-check"></i><b>3.2.2</b> 余弦相似性</a></li>
+<li class="chapter" data-level="3.2.3" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#section-3.2.3"><i class="fa fa-check"></i><b>3.2.3</b> 欧氏距离</a></li>
+</ul></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">用text2vec做文本分析</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="intro-doc_sim" class="section level1">
+<h1><span class="header-section-number">3</span> 文档相似性</h1>
+<p>文档相似性（或文件之间的距离）是信息检索的中心主题之一。通常人类是如何界定类似文件的？一般而言，文本之所以视为相似，是因为他它们在语义上密切相关并描述类似的概念。另一方面，“相似性”可以用于上下文中的重复性检测。我们会讨论几种常见的度量文本相似性的方法。</p>
+<div id="api" class="section level2">
+<h2><span class="header-section-number">3.1</span> API</h2>
+<p><code>text2vec</code>包提供两套函数集，以在统一的方式下度量各种距离/相似性。所有方法在编程时都特别注意计算性能和内存使用效率。</p>
+<ol style="list-style-type: decimal">
+<li><code>sim2(x, y, method)</code> 使用给定的method ，计算矩阵x的每一行和矩阵 y的每一行之间的相似性。</li>
+<li><code>psim2(x, y, method)</code> 使用给定的method，计算矩阵x的行与矩阵y的对应行之间的平行相似性。</li>
+<li><code>dist2(x, y, method)</code> 使用给定的method ，计算矩阵x的每一行和矩阵 y的的每一行之间的距离/相异性。</li>
+<li><code>pdist2(x, y, method)</code> 使用给定的method.，计算矩阵x的行与矩阵y的对应行之间的平行距离或相异度。</li>
+</ol>
+<p>函数名有后缀 2 ，是因为相对于<code>base</code>包里的<code>dist()</code>函数，我编写的这些函数要处理两个矩阵而不是一个。</p>
+<p>目前可以使用的计算方法有：</p>
+<ol style="list-style-type: decimal">
+<li>杰卡德距离（Jaccard distance）</li>
+<li>余弦距离（Cosine distance）</li>
+<li>欧氏距离（Euclidean distance）</li>
+<li>松散的词汇<a href="http://www.cnblogs.com/jackyzzy/p/3314667.html">移动距离</a>（RWMD）</li>
+</ol>
+</div>
+<div id="section-3.2" class="section level2">
+<h2><span class="header-section-number">3.2</span> 实例</h2>
+<p>像往常一样，我们将使用内置的<code>text2vec::moview_review</code>数据集。让我们先把它清理一下：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(stringr)
+<span class="kw">library</span>(text2vec)
+<span class="kw">data</span>(<span class="st">&quot;movie_review&quot;</span>)
+<span class="co"># select 500 rows for faster running times</span>
+movie_review =<span class="st"> </span>movie_review[<span class="dv">1</span>:<span class="dv">500</span>, ]
+prep_fun =<span class="st"> </span>function(x) {
+  x %&gt;%<span class="st"> </span>
+<span class="st">    </span><span class="co"># make text lower case</span>
+<span class="st">    </span>str_to_lower %&gt;%<span class="st"> </span>
+<span class="st">    </span><span class="co"># remove non-alphanumeric symbols</span>
+<span class="st">    </span><span class="kw">str_replace_all</span>(<span class="st">&quot;[^[:alnum:]]&quot;</span>, <span class="st">&quot; &quot;</span>) %&gt;%<span class="st"> </span>
+<span class="st">    </span><span class="co"># collapse multiple spaces</span>
+<span class="st">    </span><span class="kw">str_replace_all</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">s+&quot;</span>, <span class="st">&quot; &quot;</span>)
+}
+movie_review$review_clean =<span class="st"> </span><span class="kw">prep_fun</span>(movie_review$review)</code></pre></div>
+<p>现在，让我们来定义两套文档，我们将在其上使用距离度量模型：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">doc_set_1 =<span class="st"> </span>movie_review[<span class="dv">1</span>:<span class="dv">300</span>, ]
+it1 =<span class="st"> </span><span class="kw">itoken</span>(doc_set_1$review_clean, <span class="dt">progressbar =</span> <span class="ot">FALSE</span>)
+
+<span class="co"># specially take different number of docs in second set</span>
+doc_set_2 =<span class="st"> </span>movie_review[<span class="dv">301</span>:<span class="dv">500</span>, ]
+it2 =<span class="st"> </span><span class="kw">itoken</span>(doc_set_2$review_clean, <span class="dt">progressbar =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<p>我们将在一个向量空间中比较文档。因此，我们需要将目标文档映射到一个共用的向量空间中去。我们将使用基于词汇的向量化模型，因为它更容易解释：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">it =<span class="st"> </span><span class="kw">itoken</span>(movie_review$review_clean, <span class="dt">progressbar =</span> <span class="ot">FALSE</span>)
+v =<span class="st"> </span><span class="kw">create_vocabulary</span>(it) %&gt;%<span class="st"> </span><span class="kw">prune_vocabulary</span>(<span class="dt">doc_proportion_max =</span> <span class="fl">0.1</span>, <span class="dt">term_count_min =</span> <span class="dv">5</span>)
+vectorizer =<span class="st"> </span><span class="kw">vocab_vectorizer</span>(v)</code></pre></div>
+<div id="jaccard" class="section level3">
+<h3><span class="header-section-number">3.2.1</span> Jaccard相似</h3>
+<p>Jaccard相似是对两个集合的一种简单而直观的相似度度量方法。</p>
+<p><span class="math display">\[J(doc_1, doc_2) = \frac{doc_1 \cap doc_2}{doc_1 \cup doc_2}\]</span></p>
+<p>我们使用文档1和文档2共用词项的数目和两个文档中词项数总和的比值作为文档相似度的计算方法。</p>
+<p>为了计算两个文本之间的Jaccard相似性我们需要提供两个文档的DTM（DTM的应在相同的向量空间！）：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># 他们应该在同一个向量空间中，因为我们使用了相同的向量生成器来处理它们</span>
+<span class="co"># 哈希向量生成器也应该能使用</span>
+dtm1 =<span class="st"> </span><span class="kw">create_dtm</span>(it1, vectorizer)
+<span class="kw">dim</span>(dtm1)</code></pre></div>
+<pre><code>## [1]  300 2339</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dtm2 =<span class="st"> </span><span class="kw">create_dtm</span>(it2, vectorizer)
+<span class="kw">dim</span>(dtm2)</code></pre></div>
+<pre><code>## [1]  200 2339</code></pre>
+<p>一旦进行了文本在向量空间中的映射（文本向量化），我们就快完成了。只剩下一件事–呼叫sim2()函数！</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d1_d2_jac_sim =<span class="st"> </span><span class="kw">sim2</span>(dtm1, dtm2, <span class="dt">method =</span> <span class="st">&quot;jaccard&quot;</span>, <span class="dt">norm =</span> <span class="st">&quot;none&quot;</span>)</code></pre></div>
+<p>检查结果：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dim</span>(d1_d2_jac_sim)</code></pre></div>
+<pre><code>## [1] 300 200</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d1_d2_jac_sim[<span class="dv">1</span>:<span class="dv">2</span>, <span class="dv">1</span>:<span class="dv">5</span>]</code></pre></div>
+<pre><code>## 2 x 5 sparse Matrix of class &quot;dgCMatrix&quot;
+##            1 2          3           4          5
+## 1 0.02142857 . 0.02362205 0.007575758 0.02597403
+## 2 0.01204819 . 0.02898551 0.013698630 0.02061856</code></pre>
+<p>此外，我们可以计算平行相似性——两个矩阵的对应的行之间的相似性（矩阵应该有相同的形状）：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dtm1_2 =<span class="st"> </span>dtm1[<span class="dv">1</span>:<span class="dv">200</span>, ]
+dtm2_2 =<span class="st"> </span>dtm2[<span class="dv">1</span>:<span class="dv">200</span>, ]
+d1_d2_jac_psim =<span class="st"> </span><span class="kw">psim2</span>(dtm1_2, dtm2_2, <span class="dt">method =</span> <span class="st">&quot;jaccard&quot;</span>, <span class="dt">norm =</span> <span class="st">&quot;none&quot;</span>)
+<span class="kw">str</span>(d1_d2_jac_psim)</code></pre></div>
+<pre><code>##  Named num [1:200] 0.02143 0 0.00735 0 0.03311 ...
+##  - attr(*, &quot;names&quot;)= chr [1:200] &quot;1&quot; &quot;2&quot; &quot;3&quot; &quot;4&quot; ...</code></pre>
+<p>我们如此定义Jaccard距离或Jaccard相异性：<span class="math display">\[1 -similarity(doc_1，doc_2)\]</span> <code>sim2()</code>和<code>psim2()</code>有相应的相异度计算功能<code>dist2()</code> <code>pdist2()</code>。需要注意的是，在许多情况下，文档之间的相似性是0，而<code>sim2</code>能利用这一优势——结果矩阵是一个稀疏矩阵。但在大型稀疏矩阵上使用<code>dist2()</code>时就得注意了——稀疏矩阵会变得致密（大量的0被替换成了1）</p>
+</div>
+<div id="section-3.2.2" class="section level3">
+<h3><span class="header-section-number">3.2.2</span> 余弦相似性</h3>
+<p>经典的计算语言学方法通过计算文档之间的重叠内容来衡量文档的相似性。为此，我们将文档视为词袋，那么每个文档将是一个稀疏向量。我们用向量之间的角度来定义文档之间的“重叠”：</p>
+<p><span class="math display">\[similarity(doc_1, doc_2) = cos(\theta) = \frac{doc_1  doc_2}{\lvert doc_1\rvert \lvert doc_2\rvert}\]</span></p>
+<p>余弦距离/相异我们定义如下：</p>
+<p><span class="math display">\[distance(doc_1, doc_2) = 1 - similarity(doc_1, doc_2)\]</span></p>
+<p>然而要注意的是，这不是一个在数学意义上合适的距离度量，因为它不满足三角不等式，违反了同一律。</p>
+<p>余弦相似度的计算和<em>Jaccard</em>相似：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d1_d2_cos_sim =<span class="st"> </span><span class="kw">sim2</span>(dtm1, dtm2, <span class="dt">method =</span> <span class="st">&quot;cosine&quot;</span>, <span class="dt">norm =</span> <span class="st">&quot;l2&quot;</span>)</code></pre></div>
+<p>检查结果：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dim</span>(d1_d2_cos_sim)</code></pre></div>
+<pre><code>## [1] 300 200</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d1_d2_cos_sim[<span class="dv">1</span>:<span class="dv">2</span>, <span class="dv">1</span>:<span class="dv">5</span>]</code></pre></div>
+<pre><code>## 2 x 5 sparse Matrix of class &quot;dgCMatrix&quot;
+##            1 2          3           4          5
+## 1 0.02703999 . 0.05063299 0.009500143 0.02753954
+## 2 0.02440658 . 0.06528840 0.034299717 0.03977196</code></pre>
+<div id="tf-idf" class="section level4">
+<h4><span class="header-section-number">3.2.2.1</span> 余弦相似度与TF-IDF</h4>
+<p>在进行过<em>变换</em>的矩阵上计算相似性要比在一般的词袋矩阵上要来得有用。一个选择是使用TF-IDF变换。首先让我们创建一个TF-IDF模型：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dtm =<span class="st"> </span><span class="kw">create_dtm</span>(it, vectorizer)
+tfidf =<span class="st"> </span>TfIdf$<span class="kw">new</span>()
+dtm_tfidf =<span class="st"> </span><span class="kw">fit_transform</span>(dtm, tfidf)</code></pre></div>
+<p>计算dtm_tfidf矩阵所有行之间的相似度：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d1_d2_tfidf_cos_sim =<span class="st"> </span><span class="kw">sim2</span>(<span class="dt">x =</span> dtm_tfidf, <span class="dt">method =</span> <span class="st">&quot;cosine&quot;</span>, <span class="dt">norm =</span> <span class="st">&quot;l2&quot;</span>)
+d1_d2_tfidf_cos_sim[<span class="dv">1</span>:<span class="dv">2</span>, <span class="dv">1</span>:<span class="dv">5</span>]</code></pre></div>
+<pre><code>## 2 x 5 sparse Matrix of class &quot;dgCMatrix&quot;
+##             1           2          3          4          5
+## 1 1.000000000 0.007850872 0.02380155 0.02864296 0.01510648
+## 2 0.007850872 1.000000000 0.01115547 .          .</code></pre>
+</div>
+<div id="lsa" class="section level4">
+<h4><span class="header-section-number">3.2.2.2</span> 使用LSA的余弦相似性</h4>
+<p>通常TF-IDF /词袋矩阵中含有大量的噪音。应用LSA（潜在语义模型）可以帮助解决这个问题，这样能得到更好的相似性度量。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lsa =<span class="st"> </span>LSA$<span class="kw">new</span>(<span class="dt">n_topics =</span> <span class="dv">100</span>)
+dtm_tfidf_lsa =<span class="st"> </span><span class="kw">fit_transform</span>(dtm_tfidf, lsa)</code></pre></div>
+<p>计算dtm_tfidf_lsa矩阵所有行之间的相似性：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d1_d2_tfidf_cos_sim =<span class="st"> </span><span class="kw">sim2</span>(<span class="dt">x =</span> dtm_tfidf_lsa, <span class="dt">method =</span> <span class="st">&quot;cosine&quot;</span>, <span class="dt">norm =</span> <span class="st">&quot;l2&quot;</span>)
+d1_d2_tfidf_cos_sim[<span class="dv">1</span>:<span class="dv">2</span>, <span class="dv">1</span>:<span class="dv">5</span>]</code></pre></div>
+<pre><code>##           1         2         3          4          5
+## 1 1.0000000 0.1699795 0.3688813 0.32099166 0.40136134
+## 2 0.1699795 1.0000000 0.2255580 0.03386272 0.05705503</code></pre>
+<p>而“平行相似性”的计算则是：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x =<span class="st"> </span>dtm_tfidf_lsa[<span class="dv">1</span>:<span class="dv">250</span>, ]
+y =<span class="st"> </span>dtm_tfidf_lsa[<span class="dv">251</span>:<span class="dv">500</span>, ]
+<span class="kw">head</span>(<span class="kw">psim2</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y, <span class="dt">method =</span> <span class="st">&quot;cosine&quot;</span>, <span class="dt">norm =</span> <span class="st">&quot;l2&quot;</span>))</code></pre></div>
+<pre><code>##          1          2          3          4          5          6 
+## 0.21684991 0.19825612 0.30505693 0.10039684 0.29249032 0.03676142</code></pre>
+</div>
+</div>
+<div id="section-3.2.3" class="section level3">
+<h3><span class="header-section-number">3.2.3</span> 欧氏距离</h3>
+<p><strong>欧氏距离</strong>在NLP领域不像杰卡德或余弦相似性那样非常有用。但尝试一下不同的度量方法总是值得的。在text2vec中它只能运用在密集矩阵上，这里是例子：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x =<span class="st"> </span>dtm_tfidf_lsa[<span class="dv">1</span>:<span class="dv">300</span>, ]
+y =<span class="st"> </span>dtm_tfidf_lsa[<span class="dv">1</span>:<span class="dv">200</span>, ]
+m1 =<span class="st"> </span><span class="kw">dist2</span>(x, y, <span class="dt">method =</span> <span class="st">&quot;euclidean&quot;</span>)</code></pre></div>
+<p>此外，我们可以采用不同的行归一化技术（默认情况下是“L2”规范化）：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">m2 =<span class="st"> </span><span class="kw">dist2</span>(x, y, <span class="dt">method =</span> <span class="st">&quot;euclidean&quot;</span>, <span class="dt">norm =</span> <span class="st">&quot;l1&quot;</span>)
+m3 =<span class="st"> </span><span class="kw">dist2</span>(x, y, <span class="dt">method =</span> <span class="st">&quot;euclidean&quot;</span>, <span class="dt">norm =</span> <span class="st">&quot;none&quot;</span>)</code></pre></div>
+
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="intro-textmining.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script>
+require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"facebook": true,
+"twitter": true,
+"google": false,
+"weibo": false,
+"instapper": false,
+"vk": false,
+"all": ["facebook", "google", "twitter", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    if (location.protocol !== "file:" && /^https?:/.test(script.src))
+      script.src  = script.src.replace(/^https?:/, '');
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

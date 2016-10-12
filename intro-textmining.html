@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>用text2vec做文本分析</title>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <meta name="description" content="介绍用text2vec包进行文本分析的若干步骤，包括建立文本-词矩阵、文本聚类、文本分类、glovec算法、LDA算法等。">
+  <meta name="generator" content="bookdown 0.1.16 and GitBook 2.6.7">
+
+  <meta property="og:title" content="用text2vec做文本分析" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="介绍用text2vec包进行文本分析的若干步骤，包括建立文本-词矩阵、文本聚类、文本分类、glovec算法、LDA算法等。" />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="用text2vec做文本分析" />
+  
+  <meta name="twitter:description" content="介绍用text2vec包进行文本分析的若干步骤，包括建立文本-词矩阵、文本聚类、文本分类、glovec算法、LDA算法等。" />
+  
+
+<meta name="author" content="德米特里·谢利瓦诺夫">
+
+  
+<meta name="date" content="2016-10-12">
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  
+<link rel="prev" href="index.html">
+<link rel="next" href="intro-doc-sim.html">
+
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+</head>
+
+<body>
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> text2vec简介</a></li>
+<li class="chapter" data-level="2" data-path="intro-textmining.html"><a href="intro-textmining.html"><i class="fa fa-check"></i><b>2</b> 文本分析的一般步骤</a><ul>
+<li class="chapter" data-level="2.1" data-path="intro-textmining.html"><a href="intro-textmining.html#section-2.1"><i class="fa fa-check"></i><b>2.1</b> 实例</a><ul>
+<li class="chapter" data-level="2.1.1" data-path="intro-textmining.html"><a href="intro-textmining.html#vect"><i class="fa fa-check"></i><b>2.1.1</b> 向量化</a></li>
+<li class="chapter" data-level="2.1.2" data-path="intro-textmining.html"><a href="intro-textmining.html#transform"><i class="fa fa-check"></i><b>2.1.2</b> DTM的基本变换</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html"><i class="fa fa-check"></i><b>3</b> 文档相似性</a><ul>
+<li class="chapter" data-level="3.1" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#api"><i class="fa fa-check"></i><b>3.1</b> API</a></li>
+<li class="chapter" data-level="3.2" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#-1"><i class="fa fa-check"></i><b>3.2</b> 实例</a><ul>
+<li class="chapter" data-level="3.2.1" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#jaccard"><i class="fa fa-check"></i><b>3.2.1</b> Jaccard相似</a></li>
+<li class="chapter" data-level="3.2.2" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#section-3.2.2"><i class="fa fa-check"></i><b>3.2.2</b> 余弦相似性</a></li>
+<li class="chapter" data-level="3.2.3" data-path="intro-doc-sim.html"><a href="intro-doc-sim.html#section-3.2.3"><i class="fa fa-check"></i><b>3.2.3</b> 欧氏距离</a></li>
+</ul></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">用text2vec做文本分析</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="intro-textmining" class="section level1">
+<h1><span class="header-section-number">2</span> 文本分析的一般步骤</h1>
+<p>大多数文本挖掘和自然语言处理（NLP）建模使用<a href="https://en.wikipedia.org/wiki/Bag-of-words_model">词袋</a>或<a href="http://baike.baidu.com/view/1394579.htm">n-gram</a>的方法。尽管这些模型很简单，但它们通常表现出良好的文本归类和分类性能。它们在理论上看起来是这样简洁，在实践上它们又那么有效。只是真的要我们用软件实现起来，这似乎又不那么简单了。R语言由于它的<em>copy-on-modify</em>特性因而显得特别明显。</p>
+<p>让我们先简要回顾一下一个典型的文本分析过程中的若干步骤：</p>
+<ol style="list-style-type: decimal">
+<li>研究者首先用从它们的要分析的文档中构造一个<a href="https://en.wikipedia.org/wiki/Document-term_matrix">文档-词矩阵</a>阵(DTM)或者“词共现矩阵”(TCM)。换句话说，第一步要进行文本的向量化——建立一个词项或n-gram到<a href="https://en.wikipedia.org/wiki/Vector_space_model">向量空间</a>（vector space）的映射。</li>
+<li>研究者在DTM使用各种模型。这些模型可能包括文本分类，主题模型，相似性匹配等等。拟合模型也少不了调整和验证。</li>
+<li>最后，研究者把模型运用到新的数据上。</li>
+</ol>
+<p>在这个小教程中，我们将主要讨论第一步。文本本身会占用大量的内存，但向量化后的文本通常不会这样，因为它们被存储在了稀疏矩阵中。但由于R的<a href="http://www.tuicool.com/articles/QjMBN3">copy-on-modify</a>特性，我们是很难用交互的方法来构造一个DTM的。因此，哪怕只是对一个很小的文本集构造DTM，对分析师和研究人员来说也是一个严重的瓶颈。创建DTM时需要把整个文本集读取到RAM中，并将其视为一个单独的向量，这样做往往会增加2到4倍的内存使用量。<strong>text2vec</strong>包提供了一个更好的构造DTM的方法，顺利地解决了这个问题。</p>
+<div id="section-2.1" class="section level2">
+<h2><span class="header-section-number">2.1</span> 实例</h2>
+<p>让我们将它应用到一个真实的案例中。我们来做一次情感分析，来看看这个核心功能是如何发挥作用的。</p>
+<p>text2vec包提供了<code>movie_review</code>数据集。它由5000电影评论组成，其中的每一部电影都有情感正负标记。我们也将使用<a href="https://cran.r-project.org/package=data.table">data.table</a>包数据处理。</p>
+<p>首先，让我们把数据集分成两部分——<em>训练集</em>和<em>测试集</em>。我们将展示如何在<em>训练集</em>上进行数据操作，然后在<em>测试集</em>进行完全相同的操作：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(text2vec)
+<span class="kw">library</span>(data.table)
+<span class="kw">data</span>(<span class="st">&quot;movie_review&quot;</span>)
+<span class="kw">setDT</span>(movie_review)
+<span class="kw">setkey</span>(movie_review, id)
+<span class="kw">set.seed</span>(2016L)
+all_ids =<span class="st"> </span>movie_review$id
+train_ids =<span class="st"> </span><span class="kw">sample</span>(all_ids, <span class="dv">4000</span>)
+test_ids =<span class="st"> </span><span class="kw">setdiff</span>(all_ids, train_ids)
+train =<span class="st"> </span>movie_review[<span class="kw">J</span>(train_ids)]
+test =<span class="st"> </span>movie_review[<span class="kw">J</span>(test_ids)]</code></pre></div>
+<div id="vect" class="section level3">
+<h3><span class="header-section-number">2.1.1</span> 向量化</h3>
+<p>为了将文档表示到一个向量空间中，我们首先必须创建由词项（term）到词项索引的映射。我们称它们为<em>词项</em>（term），而不是<em>单词</em>（word），因为它们也可以各种n-gram、短语而不仅限于单词。我们将一组文档处理为稀疏矩阵，其中每一行对应一个文档，每列对应一个词项。这可以通过两种方式来完成：使用的词项本身或<a href="https://en.wikipedia.org/wiki/Feature_hashing">特征哈希</a> 。</p>
+<div id="section-2.1.1.1" class="section level4">
+<h4><span class="header-section-number">2.1.1.1</span> 基于词汇的向量化</h4>
+<p>让我们先创建一个基于词汇的DTM。在这里，我们统计文档中所有的词汇，建立一个词典，并为每一的词汇设定唯一的ID。我们使用<code>create_vocabulary()</code>函数来达成这个目的。通过<code>create_vocabulary()</code>函数，我们将建立一个迭代器，它将建立这个所需的词汇表。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># 定义预处理函数和分词函数</span>
+prep_fun =<span class="st"> </span>tolower
+tok_fun =<span class="st"> </span>word_tokenizer
+
+it_train =<span class="st"> </span><span class="kw">itoken</span>(train$review, 
+             <span class="dt">preprocessor =</span> prep_fun, 
+             <span class="dt">tokenizer =</span> tok_fun, 
+             <span class="dt">ids =</span> train$id, 
+             <span class="dt">progressbar =</span> <span class="ot">FALSE</span>)
+vocab =<span class="st"> </span><span class="kw">create_vocabulary</span>(it_train)</code></pre></div>
+<p>这儿干了啥？</p>
+<ol style="list-style-type: decimal">
+<li><p>我们用<code>itoken()</code>函数创建了一个迭代器。所有前缀为<code>create_</code>的函数都是与迭代器的工作有关的。R用户可能会发现这个语法有些奇怪，迭代器这个东西看似抽象，但却能让我们隐藏大多数与输入数据输入和处理（以节约内存的方式）的代码块。</p></li>
+<li><p>我们用<code>create_vocabulary()</code>函数建立了一个词汇表。</p></li>
+</ol>
+<p>另外，我们可以先创建词汇的列表（R语言中的list元素），并在接下来的步骤中重复利用。这个list中的每个元素应当代表一个文档，每个子元素应该是这个文档的词的文本向量（已经分好词）。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">train_tokens =<span class="st"> </span>train$review %&gt;%<span class="st"> </span>
+<span class="st">  </span>prep_fun %&gt;%<span class="st"> </span>
+<span class="st">  </span>tok_fun
+it_train =<span class="st"> </span><span class="kw">itoken</span>(train_tokens, 
+                  <span class="dt">ids =</span> train$id,
+                  <span class="co"># 关闭进度条，因为在Rmarkdown里面它似乎有些问题</span>
+                  <span class="dt">progressbar =</span> <span class="ot">FALSE</span>)
+
+vocab =<span class="st"> </span><span class="kw">create_vocabulary</span>(it_train)
+vocab</code></pre></div>
+<pre><code>## Number of docs: 4000 
+## 0 stopwords:  ... 
+## ngram_min = 1; ngram_max = 1 
+## Vocabulary: 
+##              terms terms_counts doc_counts
+##     1:     ducking            1          1
+##     2:      casket            1          1
+##     3:  overturned            1          1
+##     4:      vachon            1          1
+##     5:   michonoku            1          1
+##    ---                                    
+## 35592: unfortuntly            1          1
+## 35593:       visor            2          1
+## 35594:  evaluation            1          1
+## 35595:      briant            1          1
+## 35596:    recluses            1          1</code></pre>
+<p>需要注意的是<em>text2vec</em>提供了一些分词函数（输入<code>?tokenizers</code>)。不过这些分词函数只是基于<code>base::gsub()</code>函数写的，效率不高也不够灵活。如果你对灵活性和效率有更高的要求的话，可以使用<a href="https://cran.r-project.org/package=tokenizers">tokenizers</a>包，它涵盖了大多数的用例。你也可以使用<a href="https://cran.r-project.org/package=stringi">stringi</a>包编写自己的分词函数。</p>
+<p>现在，我们有一个词汇表了，我们可以构建一个DTM了。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vectorizer =<span class="st"> </span><span class="kw">vocab_vectorizer</span>(vocab)
+t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+dtm_train =<span class="st"> </span><span class="kw">create_dtm</span>(it_train, vectorizer)
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 1.184694 secs</code></pre>
+<p>现在我们得到了一个DTM，并能查看其大小。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dim</span>(dtm_train)</code></pre></div>
+<pre><code>## [1]  4000 35596</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">identical</span>(<span class="kw">rownames</span>(dtm_train), train$id)</code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+<p>如你所见，这个DTM有4000行，恰好等于文档的数量；35596列，这正是词汇表里词汇的数量。</p>
+<p>一切就绪，让我们来拟合第一个模型。这里我们将使用<a href="https://cran.r-project.org/package=glmnet">glmnet</a>包，来拟合以一个逻辑回归模型，并使用L1惩罚和5折交叉验证。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(glmnet)
+NFOLDS =<span class="st"> </span><span class="dv">4</span>
+t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+glmnet_classifier =<span class="st"> </span><span class="kw">cv.glmnet</span>(<span class="dt">x =</span> dtm_train, <span class="dt">y =</span> train[[<span class="st">&#39;sentiment&#39;</span>]], 
+                              <span class="dt">family =</span> <span class="st">&#39;binomial&#39;</span>, 
+                              <span class="co"># L1惩罚</span>
+                              <span class="dt">alpha =</span> <span class="dv">1</span>,
+                              <span class="co"># interested in the area under ROC curve</span>
+                              <span class="dt">type.measure =</span> <span class="st">&quot;auc&quot;</span>,
+                              <span class="co"># 5-fold cross-validation</span>
+                              <span class="dt">nfolds =</span> NFOLDS,
+                              <span class="co"># high value is less accurate, but has faster training</span>
+                              <span class="dt">thresh =</span> <span class="fl">1e-3</span>,
+                              <span class="co"># again lower number of iterations for faster training</span>
+                              <span class="dt">maxit =</span> <span class="fl">1e3</span>)
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 4.235329 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(glmnet_classifier)</code></pre></div>
+<p><img src="_main_files/figure-html/fit_1-1.png" width="672" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&quot;max AUC =&quot;</span>, <span class="kw">round</span>(<span class="kw">max</span>(glmnet_classifier$cvm), <span class="dv">4</span>)))</code></pre></div>
+<pre><code>## [1] &quot;max AUC = 0.9236&quot;</code></pre>
+<p>我们已经成功地在DTM上拟合了模型。现在，我们可以检查模型在测试集上的性能。注意，我们使用了和之前完全相同的函数进行预处理和分词操作。</p>
+<p>此外，我们也重用/使用相同的<code>vectorizer</code> 函数建立词汇到词汇索引id之间的映射。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># 注意text2vec的函数都很容易进行管式传输！</span>
+it_test =<span class="st"> </span>test$review %&gt;%<span class="st"> </span>
+<span class="st">  </span>prep_fun %&gt;%<span class="st"> </span>
+<span class="st">  </span>tok_fun %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">itoken</span>(<span class="dt">ids =</span> test$id, 
+         <span class="co"># 关闭进度条，因为在Rmd中看起来很丑</span>
+         <span class="dt">progressbar =</span> <span class="ot">FALSE</span>)
+
+dtm_test =<span class="st"> </span><span class="kw">create_dtm</span>(it_test, vectorizer)
+
+preds =<span class="st"> </span><span class="kw">predict</span>(glmnet_classifier, dtm_test, <span class="dt">type =</span> <span class="st">&#39;response&#39;</span>)[,<span class="dv">1</span>]
+glmnet:::<span class="kw">auc</span>(test$sentiment, preds)</code></pre></div>
+<pre><code>## [1] 0.916325</code></pre>
+<p>如我们所见，对测试数据表现大致和我们从交叉验证期望的一样。</p>
+<div id="section-2.1.1.1.1" class="section level5">
+<h5><span class="header-section-number">2.1.1.1.1</span> 过滤词汇</h5>
+<p>但我们注意到，这个模型的训练时间是相当长的。通过过滤一部分词汇，我们可以缩短模型的训练时间并显著地提高其准确性。</p>
+<p>例如，我们可以找到诸如<em>“的”，“了”，“是”，“也”，“我”</em>等的词汇，它们几乎在所有文档中都出现过，却没提供多少有用信息。通常，这样的词汇被称为<a href="http://baike.baidu.com/link?url=TVnKJJ3znor7snBWOwR-JeqxfMQ5Oz4VToLR9SOEKzMAs22-lgZjbbRI0u0NR0IFNI2lsBKgu0BRkNGL_E4dzn_dBKYAhhDqA8acHNKB7P2fXk6w3WBV3555I7IM8M7x">停止词</a>（stop words）。另一方面，语料库中还有一些非常罕见词汇，它们仅仅出现在几个文档中。这些词汇对我们也没用，因为我们无法获得它们充分的统计数据。在此，我们将过滤预先定义停止词，很常见的词，以及罕见词。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">stop_words =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;i&quot;</span>, <span class="st">&quot;me&quot;</span>, <span class="st">&quot;my&quot;</span>, <span class="st">&quot;myself&quot;</span>, <span class="st">&quot;we&quot;</span>, <span class="st">&quot;our&quot;</span>, <span class="st">&quot;ours&quot;</span>, <span class="st">&quot;ourselves&quot;</span>, <span class="st">&quot;you&quot;</span>, <span class="st">&quot;your&quot;</span>, <span class="st">&quot;yours&quot;</span>)
+t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+vocab =<span class="st"> </span><span class="kw">create_vocabulary</span>(it_train, <span class="dt">stopwords =</span> stop_words)
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 1.065313 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pruned_vocab =<span class="st"> </span><span class="kw">prune_vocabulary</span>(vocab, 
+                                 <span class="dt">term_count_min =</span> <span class="dv">10</span>, 
+                                 <span class="dt">doc_proportion_max =</span> <span class="fl">0.5</span>,
+                                 <span class="dt">doc_proportion_min =</span> <span class="fl">0.001</span>)
+vectorizer =<span class="st"> </span><span class="kw">vocab_vectorizer</span>(pruned_vocab)
+<span class="co"># create dtm_train with new pruned vocabulary vectorizer</span>
+t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+dtm_train  =<span class="st"> </span><span class="kw">create_dtm</span>(it_train, vectorizer)
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 1.13758 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dim</span>(dtm_train)</code></pre></div>
+<pre><code>## [1] 4000 6585</code></pre>
+<p>注意，新DTM比原始DTM的列要少很多。通常这样能既能提高准确度（因为我们滤除了“噪音”）也能缩短训练时间。</p>
+<p>我们还是需要用相同迭代器创建DTM，以在测试集上使用。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dtm_test   =<span class="st"> </span><span class="kw">create_dtm</span>(it_test, vectorizer)
+<span class="kw">dim</span>(dtm_test)</code></pre></div>
+<pre><code>## [1] 1000 6585</code></pre>
+</div>
+</div>
+<div id="n-grams" class="section level4">
+<h4><span class="header-section-number">2.1.1.2</span> N-grams</h4>
+<p>我们可以优化模型吗？确凿无疑——我们可以使用<em>n-grams</em>代替<em>词项</em>。在这里，我们将使用<em>2-grams</em>：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+vocab =<span class="st"> </span><span class="kw">create_vocabulary</span>(it_train, <span class="dt">ngram =</span> <span class="kw">c</span>(1L, 2L))
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 2.173869 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vocab =<span class="st"> </span>vocab %&gt;%<span class="st"> </span><span class="kw">prune_vocabulary</span>(<span class="dt">term_count_min =</span> <span class="dv">10</span>, 
+                   <span class="dt">doc_proportion_max =</span> <span class="fl">0.5</span>)
+
+bigram_vectorizer =<span class="st"> </span><span class="kw">vocab_vectorizer</span>(vocab)
+
+dtm_train =<span class="st"> </span><span class="kw">create_dtm</span>(it_train, bigram_vectorizer)
+
+t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+glmnet_classifier =<span class="st"> </span><span class="kw">cv.glmnet</span>(<span class="dt">x =</span> dtm_train, <span class="dt">y =</span> train[[<span class="st">&#39;sentiment&#39;</span>]], 
+                 <span class="dt">family =</span> <span class="st">&#39;binomial&#39;</span>, 
+                 <span class="dt">alpha =</span> <span class="dv">1</span>,
+                 <span class="dt">type.measure =</span> <span class="st">&quot;auc&quot;</span>,
+                 <span class="dt">nfolds =</span> NFOLDS,
+                 <span class="dt">thresh =</span> <span class="fl">1e-3</span>,
+                 <span class="dt">maxit =</span> <span class="fl">1e3</span>)
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 3.706913 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(glmnet_classifier)</code></pre></div>
+<p><img src="_main_files/figure-html/ngram_dtm_1-1.png" width="672" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&quot;max AUC =&quot;</span>, <span class="kw">round</span>(<span class="kw">max</span>(glmnet_classifier$cvm), <span class="dv">4</span>)))</code></pre></div>
+<pre><code>## [1] &quot;max AUC = 0.9216&quot;</code></pre>
+<p>似乎n-gram的使用让我们的模型稍稍改善了一点。让我们检查模型在测试集上的性能：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># apply vectorizer</span>
+dtm_test =<span class="st"> </span><span class="kw">create_dtm</span>(it_test, bigram_vectorizer)
+preds =<span class="st"> </span><span class="kw">predict</span>(glmnet_classifier, dtm_test, <span class="dt">type =</span> <span class="st">&#39;response&#39;</span>)[,<span class="dv">1</span>]
+glmnet:::<span class="kw">auc</span>(test$sentiment, preds)</code></pre></div>
+<pre><code>## [1] 0.9268334</code></pre>
+<p>进一步的调整就留给读者你去做啦。</p>
+</div>
+<div id="section-2.1.1.3" class="section level4">
+<h4><span class="header-section-number">2.1.1.3</span> 特征哈希</h4>
+<p>如果你不熟悉的特征哈希（即所谓的“哈希把戏”），我建议你先读读<a href="https://en.wikipedia.org/wiki/Feature_hashing">维基百科</a>的文章 ，然后去看看雅虎研究团队的<a href="http://alex.smola.org/papers/2009/Weinbergeretal09.pdf">原始论文</a>。这种技术速度非常快，因为我们不需要在联合阵列中进行查找。另一个好处是，它的内存占用非常低，因为我们可以将任意的特征值映射到更紧凑的空间中。此方法是由雅虎普及的，并在<a href="https://github.com/JohnLangford/vowpal_wabbit/">Vowpal Wabbit</a>中广泛应用。</p>
+<p>下面展示如何在<em>text2vec</em>中使用哈希特征编码。</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">h_vectorizer =<span class="st"> </span><span class="kw">hash_vectorizer</span>(<span class="dt">hash_size =</span> <span class="dv">2</span> ^<span class="st"> </span><span class="dv">14</span>, <span class="dt">ngram =</span> <span class="kw">c</span>(1L, 2L))
+
+t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+dtm_train =<span class="st"> </span><span class="kw">create_dtm</span>(it_train, h_vectorizer)
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 3.000299 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+glmnet_classifier =<span class="st"> </span><span class="kw">cv.glmnet</span>(<span class="dt">x =</span> dtm_train, <span class="dt">y =</span> train[[<span class="st">&#39;sentiment&#39;</span>]], 
+                             <span class="dt">family =</span> <span class="st">&#39;binomial&#39;</span>, 
+                             <span class="dt">alpha =</span> <span class="dv">1</span>,
+                             <span class="dt">type.measure =</span> <span class="st">&quot;auc&quot;</span>,
+                             <span class="dt">nfolds =</span> <span class="dv">5</span>,
+                             <span class="dt">thresh =</span> <span class="fl">1e-3</span>,
+                             <span class="dt">maxit =</span> <span class="fl">1e3</span>)
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 6.106346 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(glmnet_classifier)</code></pre></div>
+<p><img src="_main_files/figure-html/hash_dtm-1.png" width="672" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&quot;max AUC =&quot;</span>, <span class="kw">round</span>(<span class="kw">max</span>(glmnet_classifier$cvm), <span class="dv">4</span>)))</code></pre></div>
+<pre><code>## [1] &quot;max AUC = 0.8937&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dtm_test =<span class="st"> </span><span class="kw">create_dtm</span>(it_test, h_vectorizer)
+
+preds =<span class="st"> </span><span class="kw">predict</span>(glmnet_classifier, dtm_test , <span class="dt">type =</span> <span class="st">&#39;response&#39;</span>)[, <span class="dv">1</span>]
+glmnet:::<span class="kw">auc</span>(test$sentiment, preds)</code></pre></div>
+<pre><code>## [1] 0.9036685</code></pre>
+<p>正如你可以看到，我们的AUC是差了些，但构造DTM的时间却有效地缩短了。在大文档集上这可能是一个显著的优势。</p>
+</div>
+</div>
+<div id="transform" class="section level3">
+<h3><span class="header-section-number">2.1.2</span> DTM的基本变换</h3>
+<p>在分析之前，对 DTM做一些<em>变换</em>是有用的。例如，集合中的文档长度可能显著不同。在这种情况下，进行归一化处理就很有用。</p>
+<div id="section-2.1.2.1" class="section level4">
+<h4><span class="header-section-number">2.1.2.1</span> 归一化</h4>
+<p>当我们说到“归一化”的时候，我们假定是对DTM的<em>行</em>进行<em>变换</em>，所以我们用一个相同的量纲来调整用不同的量纲度量的值。在文档的长度不一的情况下，我们可以应用“L1”归一化。这意味着我们将用一种方式来进行行变换——我们使得行上值的<code>和</code>为<code>1</code>：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dtm_train_l1_norm =<span class="st"> </span><span class="kw">normalize</span>(dtm_train, <span class="st">&quot;l1&quot;</span>)</code></pre></div>
+<p>通过这一变换，我们应该能提高准备数据的质量水平。</p>
+</div>
+<div id="tf-idf" class="section level4">
+<h4><span class="header-section-number">2.1.2.2</span> TF-IDF</h4>
+<p>另一种流行的技术是<a href="https://en.wikipedia.org/wiki/Tf%E2%80%93idf">TF-IDF</a>变换。 我们可以（而且通常应该）将其应用到我们的DTM上。它不仅使DTM归一化，而且还能提高文档中为单个或几个的文档所特有的词汇的权重，并降低文档中大量使用的词汇的权重：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vocab =<span class="st"> </span><span class="kw">create_vocabulary</span>(it_train)
+vectorizer =<span class="st"> </span><span class="kw">vocab_vectorizer</span>(vocab)
+dtm_train =<span class="st"> </span><span class="kw">create_dtm</span>(it_train, vectorizer)
+
+<span class="co"># define tfidf model</span>
+tfidf =<span class="st"> </span>TfIdf$<span class="kw">new</span>()
+<span class="co"># fit model to train data and transform train data with fitted model</span>
+dtm_train_tfidf =<span class="st"> </span><span class="kw">fit_transform</span>(dtm_train, tfidf)
+<span class="co"># tfidf modified by fit_transform() call!</span>
+<span class="co"># apply pre-trained tf-idf transformation to test data</span>
+dtm_test_tfidf  =<span class="st"> </span><span class="kw">create_dtm</span>(it_test, vectorizer) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">transform</span>(tfidf)</code></pre></div>
+<p>注意，在这里，我们第一次在<em>text2vec</em>中接触<em>model</em>对象。此时，我们应记住<em>text2vec</em>中有关模型的几个重要事项：</p>
+<ol style="list-style-type: decimal">
+<li>模型可是用给定数据（训练集）拟合的，并能作用于未知数据（测试集）。</li>
+<li>模型是可修改的 -一旦你将<code>fit()</code>或<code>fit_transform()</code>函数作用于模型对象，模型就将发生改变。</li>
+<li>模型被拟合后，它可以就通过<code>transform(new_data,fitted_model)</code>函数被应用到一个新数据上去。</li>
+</ol>
+<p>关于模型和模型API的更详细介绍，我将很快在若干的教程中分别叙述。</p>
+<p>一旦用TF-IDF重新加权后DTM准备好了，我们就可以再次拟合我们的线性分类器：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">t1 =<span class="st"> </span><span class="kw">Sys.time</span>()
+glmnet_classifier =<span class="st"> </span><span class="kw">cv.glmnet</span>(<span class="dt">x =</span> dtm_train_tfidf, <span class="dt">y =</span> train[[<span class="st">&#39;sentiment&#39;</span>]], 
+                              <span class="dt">family =</span> <span class="st">&#39;binomial&#39;</span>, 
+                              <span class="dt">alpha =</span> <span class="dv">1</span>,
+                              <span class="dt">type.measure =</span> <span class="st">&quot;auc&quot;</span>,
+                              <span class="dt">nfolds =</span> NFOLDS,
+                              <span class="dt">thresh =</span> <span class="fl">1e-3</span>,
+                              <span class="dt">maxit =</span> <span class="fl">1e3</span>)
+<span class="kw">print</span>(<span class="kw">difftime</span>(<span class="kw">Sys.time</span>(), t1, <span class="dt">units =</span> <span class="st">&#39;sec&#39;</span>))</code></pre></div>
+<pre><code>## Time difference of 4.073592 secs</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(glmnet_classifier)</code></pre></div>
+<p><img src="_main_files/figure-html/fit_2-1.png" width="672" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&quot;max AUC =&quot;</span>, <span class="kw">round</span>(<span class="kw">max</span>(glmnet_classifier$cvm), <span class="dv">4</span>)))</code></pre></div>
+<pre><code>## [1] &quot;max AUC = 0.9151&quot;</code></pre>
+<p>让我们来看看在测试集上的模型性能：</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">preds =<span class="st"> </span><span class="kw">predict</span>(glmnet_classifier, dtm_test_tfidf, <span class="dt">type =</span> <span class="st">&#39;response&#39;</span>)[,<span class="dv">1</span>]
+glmnet:::<span class="kw">auc</span>(test$sentiment, preds)</code></pre></div>
+<pre><code>## [1] 0.9053246</code></pre>
+<p>通常，使用<em>TF-IDF</em>变换能<strong>显著地</strong>改善模型在大部分下游任务中的表现。</p>
+
+</div>
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="intro-doc-sim.html" class="navigation navigation-next " aria-label="Next page""><i class="fa fa-angle-right"></i></a>
+
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script>
+require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"facebook": true,
+"twitter": true,
+"google": false,
+"weibo": false,
+"instapper": false,
+"vk": false,
+"all": ["facebook", "google", "twitter", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    if (location.protocol !== "file:" && /^https?:/.test(script.src))
+      script.src  = script.src.replace(/^https?:/, '');
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
